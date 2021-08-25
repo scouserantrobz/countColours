@@ -45,7 +45,8 @@ The function gives one of three results:
 3. "Check the 2nd value, it doesn't seem to be a valid colour or cell reference." - if the script cannot determine a background colour from the second argument, then it returns this error message.
 
 ## Examples
-<img src="https://lh3.google.com/u/0/d/1t_eDkJa5rBe9u6EN2uxIlPgQ3g8N5LKc=w1029-h682-iv2" alt="Displaying countColours.jpg" aria-hidden="true">
+![Image of Examples](https://lh5.googleusercontent.com/-QUoFAWwC5xEXkdABu1CP9mgTIlkjPgBq-sXfIvUBLs-nqnvLYWFpNAoy2WHapnog57fGj7G7XD7BxZE9SDf=w1029-h682)
+
 
 ## Installation
 - Create or open a spreadsheet in Google Sheets
