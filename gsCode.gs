@@ -1,37 +1,16 @@
+const ss = SpreadsheetApp.getActive();
+const sh = ss.getActiveSheet();
 function countColour( range, cellOrColour ) {
-  const ss = SpreadsheetApp.getActive()
-  const sh = ss.getActiveSheet()
-  let shName, cellRef, dataRange, hexColour = "", count
-  // get the cell colour we need to count
-  if ( cellOrColour.slice(0,1) === "#" ){
-    // have HEX value
-    hexColour = cellOrColour.toLowerCase()
-  } else if ( cellOrColour.indexOf("!") > 0 ){
-    // cell reference on a different sheet
-    [ shName, cellRef ] = cellOrColour.split("!")
-    hexColour = getBgColour( ss.getSheetByName( shName ), cellRef )
-  } else {
-    hexColour = getHexFromName( cellOrColour.toLowerCase() )
-    if ( typeof hexColour == 'undefined' ) {
-      // must be a cell reference
-      hexColour = getBgColour( sh, cellOrColour )
-    }
-  }
-  if ( hexColour === "" ){
+  const hexColour = getHexColour( cellOrColour )
+  if ( hexColour === null ){
     return "Check the 2nd value, it doesn't seem to be a valid colour or cell reference."
   }
-  // now process range
-  try {
-    if ( range.indexOf("!") > 0 ){
-      [ shName, cellRef ] = range.split("!")
-      dataRange = ss.getSheetByName( shName ).getRange( cellRef )
-    } else {
-      dataRange = sh.getRange( range )
-    }
-  } catch(e){
+  const dataRange = getDataRange( range )
+  if ( dataRange === null ){
     return "Check the 1st value, it doesn't seem to be a valid range."
   }
-  const bgColours = dataRange.getBackgrounds();
+  const bgColours = getBgColours( dataRange )
+  let count = 0
   if ( bgColours[0].length === 1 ){
     count = bgColours.reduce( (total, num) => {
       return total + (num[0] === hexColour);
@@ -46,11 +25,75 @@ function countColour( range, cellOrColour ) {
   }
   return count
 }
+function sumColour( range, cellOrColour ) {
+  const hexColour = getHexColour( cellOrColour )
+  if ( hexColour === null ){
+    return "Check the 2nd value, it doesn't seem to be a valid colour or cell reference."
+  }  
+  const dataRange = getDataRange( range )
+  if ( dataRange === null ){
+    return "Check the 1st value, it doesn't seem to be a valid range."
+  }
+  const dataV = getDataValues( dataRange )
+  const bgColours = getBgColours( dataRange )
+  let sum = 0
+  dataV.forEach( ( rows, iR ) => {
+    rows.forEach( ( cell, iC ) => {
+      sum = bgColours[iR][iC] === hexColour && !isNaN(cell) ? sum + parseFloat(cell) : sum
+    })
+  })
+  return sum
+}
+function getDataValues( dataRange ){
+  const dataValues = dataRange.getDisplayValues();
+  //Logger.log( dataValues )
+  return dataValues  
+}
+function getHexColour( cellOrColour ){
+  let shName, cellRef, hexColour = null
+  const hex6 = new RegExp(/^#[0-9A-F]{6}$/i)
+  const hex3 = new RegExp(/^#([0-9A-F]{3}){1,2}$/i)
+  // get the cell colour we need to count
+  if ( hex6.test( cellOrColour ) || hex3.test( cellOrColour ) ){
+    // have HEX value
+    hexColour = cellOrColour.toLowerCase()
+  } else if ( cellOrColour.indexOf("!") > 0 ){
+    // cell reference on a different sheet
+    [ shName, cellRef ] = cellOrColour.split("!")
+    hexColour = getBgColour( ss.getSheetByName( shName ), cellRef )
+  } else {
+    hexColour = getHexFromName( cellOrColour.toLowerCase() )
+    if ( typeof hexColour == 'undefined' ) {
+      // must be a cell reference
+      hexColour = getBgColour( sh, cellOrColour )
+    }
+  }
+  return hexColour
+}
+function getDataRange( range ){
+  // now process range
+  let dataRange = null
+  try {
+    if ( range.indexOf("!") > 0 ){
+      [ shName, cellRef ] = range.split("!")
+      dataRange = ss.getSheetByName( shName ).getRange( cellRef )
+    } else {
+      dataRange = sh.getRange( range )
+    }
+  } catch(e){
+    // error with range
+  }
+  return dataRange
+}
+function getBgColours( dataRange ){
+  return bgColours = dataRange.getBackgrounds();
+}
+
 function getBgColour( sh, cellRef ){
   try {
     return sh.getRange(cellRef).getBackground()
   } catch(e){
-    return ""
+    return null
   }
 }
 function getHexFromName( colourName ){
